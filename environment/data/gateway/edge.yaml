@@ -1,0 +1,41 @@
+# fleetdesk API edge: CORS filter configuration, rev 41
+# OPTIONS requests are answered by this filter before the access logger runs.
+
+cors:
+  allow_origins: ["http://console.fleetdesk.test"]
+  allow_credentials: true          # adds Access-Control-Allow-Credentials: true
+  allow_methods: [GET, POST, PUT, PATCH, DELETE]
+  allow_headers: [authorization, content-type, idempotency-key, x-desk-trace, x-desk-tenant]
+  max_age: 600                     # seconds, sent as Access-Control-Max-Age
+  # Access-Control-Allow-Origin echoes the request's Origin when it is listed above.
+  # On routes the filter answers itself, actual (non-OPTIONS) responses get
+  # Access-Control-Allow-Origin, -Allow-Credentials and Vary: Origin.
+
+routes:
+  - prefix: /v1/telemetry/
+    upstream: telemetry
+    cors:
+      max_age: 30
+
+  - prefix: /v1/notifications
+    upstream: inbox
+    cors:
+      max_age: 120
+
+  - prefix: /v1/reports/
+    upstream: reports-svc
+    cors:
+      preflight: forward             # reports-svc answers its own OPTIONS (reports-svc.cors.json);
+                                     # the filter adds no CORS fields of its own on this route
+    append_response_headers:         # appended to every response from this route, OPTIONS included;
+                                     # header fields the upstream sent are kept as they are
+      Access-Control-Max-Age: "600"  # the API-wide max_age
+
+  - prefix: /v2/dispatch/
+    upstream: dispatch
+    cors:
+      allow_headers: reflect         # Access-Control-Allow-Headers repeats Access-Control-Request-Headers
+      max_age: 3600
+
+  - prefix: /
+    upstream: core

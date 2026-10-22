@@ -1,0 +1,13 @@
+{
+  "service": "reports-svc",
+  "framework": "cors middleware, default options except those below",
+  "cors": {
+    "origins": ["http://console.fleetdesk.test"],
+    "credentials": true,
+    "methods": ["GET", "POST"],
+    "allowedHeaders": ["authorization", "content-type", "x-desk-trace"],
+    "maxAge": 1800,
+    "preflightContinue": false,
+    "optionsSuccessStatus": 204
+  }
+}
